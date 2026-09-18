@@ -23,25 +23,29 @@ class Stack(Generic[T]):
 
     def __init__(self) -> None:
         # TODO: internal storage (a Python list is fine as the backing store).
-        raise NotImplementedError
+        self._items: List[T] = []
 
     def push(self, item: T) -> None:
         # TODO
-        raise NotImplementedError
+        self._items.append(item)
 
     def pop(self) -> T:
         """Remove and return the top item. Raise IndexError if empty."""
         # TODO
-        raise NotImplementedError
+        if self.is_empty():
+            raise IndexError("Cannot pop from an empty stack")
+        return self._items.pop()
 
     def peek(self) -> T:
         """Return (without removing) the top item. Raise IndexError if empty."""
         # TODO
-        raise NotImplementedError
+        if self.is_empty():
+            raise IndexError("Cannot peek an empty stack")
+        return self._items[-1]
 
     def is_empty(self) -> bool:
         # TODO
-        raise NotImplementedError
+        return len(self._items) == 0 
 
 
 def evaluate_postfix(expression: str) -> float:
@@ -51,9 +55,58 @@ def evaluate_postfix(expression: str) -> float:
     malformed input -- too many operators, division by zero, etc.
     """
     # TODO
-    raise NotImplementedError
+    stack: Stack[float] = Stack()
 
+    tokens = expression.split()
 
+    if not tokens:
+        raise ValueError("Cannot enter an empty expression")
+
+    for token in tokens:
+        if token in {"+", "-", "*", "/"}:
+            if stack.is_empty():
+                raise ValueError(f"Operator '{token}'has too few operands")
+
+            right = stack.pop()
+
+            if stack.is_empty():
+                raise ValueError(f"Operator '{token}'has too few operands")
+
+            left = stack.pop()
+
+            if token == "+":
+                result = left + right 
+
+            elif token == "-":
+                result = left - right
+
+            elif token == "*":
+                result = left * right
+
+            else:
+                if right == 0:
+                    raise ValueError("Division by zero is undefined")
+
+                result = left / right 
+
+            stack.push(result)
+        else:
+            try:
+                value = float(token)
+            except ValueError:
+                raise ValueError(f"'{token}' is an invalid token")
+
+            stack.push(value)
+    if stack.is_empty():
+        raise ValueError("No result")
+
+    result = stack.pop()
+    
+    if not stack.is_empty():
+        raise ValueError("Too many operands")
+
+    return result
+                         
 def is_balanced(expression: str) -> bool:
     """
     Return True if all of (), [], {} in `expression` are correctly
@@ -62,7 +115,27 @@ def is_balanced(expression: str) -> bool:
     returning False -- never raise.
     """
     # TODO
-    raise NotImplementedError
+    stack: Stack[str] = Stack()
+
+    opening = "([{"
+    matching = {
+        ")": "(",
+        "]": "[",
+        "}": "{"
+    }
+
+    for character in expression:
+        if character in opening:
+            stack.push(character)
+
+        elif character in matching:
+            if stack.is_empty():
+                return False
+
+            if stack.pop() != matching[character]:
+                return False
+
+    return stack.is_empty()
 
 
 # ============================== VERIFICATION SUITE ==============================
